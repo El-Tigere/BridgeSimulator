@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bridges</title>
+        <style>
+            body {
+                display: grid;
+                place-items: center;
+                background-color: #222;
+                color: #FFF;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+            
+            div.canWrapper {
+                margin: 25px;
+                border: 2px solid #FFF
+            }
+            
+            div.settings {
+                margin: 25px;
+            }
+            div.settings form {
+                display: flex;
+            }
+            div.settings input[type="radio"] {
+                display: none;
+            }
+            div.settings input[type="radio"] + label {
+                display: inline-block;
+                margin: 0px 20px 10px 0px;
+                padding: 4px 8px 4px 8px;
+                border: none;
+                border-radius: 0;
+                background-color: #FFF;
+                color: #000;
+                user-select: none;
+            }
+            div.settings input[type="radio"] + label:hover {
+                background-color: #CCC;
+            }
+            div.settings input[type="radio"]:checked + label {
+                text-decoration: underline;
+            }
+            div.settings input[type="number"] {
+                width: 50px;
+            }
+            div.settings fieldset {
+                padding: 16px;
+                border: 2px solid #FFF;
+                max-width: 500px;
+            }
+            div.settings fieldset + fieldset {
+                margin-left: 20px;
+            }
+            
+            div.settings fieldset[disabled] input + label {
+                opacity: 0.5;
+            }
+            div.settings fieldset[disabled] input + label:hover {
+                background-color: #FFF;
+            }
+        </style>
+        <script src="script.js"></script>
+    </head>
+    <body>
+        <h1>Bridges</h1>
+        <div class="canWrapper">
+            <canvas id="can" width="800" height="500"></canvas>
+        </div>
+        <div class="settings">
+            <form id="settingsForm">
+                <fieldset id="settingsMode">
+                    <legend>Mode</legend>
+                    <input type="radio" name="drawMode" id="modeAddVertices" value="AddVertices" checked="checked">
+                    <label for="modeAddVertices">Add Vertices</label>
+                    <input type="radio" name="drawMode" id="modeAddEdges" value="AddEdges">
+                    <label for="modeAddEdges">Add Edges</label>
+                    <input type="radio" name="drawMode" id="modeMove" value="Move">
+                    <label for="modeMove">Move</label>
+                    <input type="radio" name="drawMode" id="modeRemoveVertices" value="RemoveVertices">
+                    <label for="modeRemoveVertices">Remove Vertices</label>
+                    <input type="radio" name="drawMode" id="modeRemoveEdges" value="RemoveEdges">
+                    <label for="modeRemoveEdges">Remove Edges</label>
+                    <input type="radio" name="drawMode" id="modeEditVertices" value="EditVertices">
+                    <label for="modeEditVertices">EditVertices</label>
+                </fieldset>
+                <fieldset id="settingsVertex" disabled>
+                    <legend>Vertex Settings</legend>
+                    <input type="radio" name="vertexType" id="typeLoose" value="Loose">
+                    <label for="typeLoose">Loose</label>
+                    <input type="radio" name="vertexType" id="typeFixedX" value="FixedX">
+                    <label for="typeFixedX">Fixed (x)</label>
+                    <input type="radio" name="vertexType" id="typeFixedY" value="FixedY">
+                    <label for="typeFixedY">Fixed (y)</label>
+                    <input type="radio" name="vertexType" id="typeFixed" value="Fixed">
+                    <label for="typeFixed">Fixed (x, y)</label>
+                </fieldset>
+                <fieldset id="settingsSimulation">
+                    <legend>Simulation</legend>
+                    <input type="checkbox" name="simulationStart" id="simulationStart">
+                    <label for="simulationStart">Start</label>
+                </fieldset>
+                <fieldset id="settingsOther">
+                    <legend>Other</legend>
+                    <input type="checkbox" name="enableGrid" id="enableGrid" checked="checked">
+                    <label for="enableGrid">grid</label><br>
+                    <input type="number" name="friction" id="friction" value="0.2" min="0" step="0.05" max="1">
+                    <label for="friction">friction</label>
+                </fieldset>
+            </form>
+        </div>
+    </body>
+</html>
