@@ -34,6 +34,7 @@ function update(deltaTime) {
     
     edges.forEach((e) => e.calcForce());
     let frictionFactor = (1 - deltaTime) ** friction;
+    //let frictionFactor = (1 - friction) ** (1 / deltaTime); // TODO: friction should be calculated like this but this does not work :(
     verts.forEach((v) => v.simulationStep(deltaTime, frictionFactor));
 }
 
@@ -52,11 +53,11 @@ class Vertex {
     
     simulationStep(deltaTime, frictionFactor) {
         this.momentum = mulVS(this.momentum, frictionFactor); // friction
-        this.force[1] += 1 * this.mass; // gravitation
+        this.force[1] += gravityForce * this.mass; // gravitation
         this.momentum = addV(this.momentum, mulVS(this.force, deltaTime));
         if(this.type == 'FixedX' || this.type == 'Fixed') this.momentum[0] = 0;
         if(this.type == 'FixedY' || this.type == 'Fixed') this.momentum[1] = 0;
-        this.simPosition = addV(this.simPosition, mulVS(this.momentum, 100 / this.mass /* this "removes" all vertices without edges in the simulation */ * deltaTime));
+        this.simPosition = addV(this.simPosition, mulVS(this.momentum, deltaTime / this.mass /* this "removes" all vertices without edges in the simulation */));
         this.force = [0, 0];
     }
 }
@@ -65,6 +66,8 @@ class Edge {
     constructor(a, b) {
         this.a = a;
         this.b = b;
+        this.k = 50; // spring characteristic
+        this.maxF = 10; // max force
     }
     
     initSimulation() {
@@ -84,10 +87,10 @@ class Edge {
         
         let actualLength = Math.sqrt((this.b.simPosition[0] - this.a.simPosition[0]) ** 2 + (this.b.simPosition[1] - this.a.simPosition[1]) ** 2);
         let deviance = actualLength - this.length;
-        this.force[0] = (this.b.simPosition[0] - this.a.simPosition[0]) / actualLength * deviance * 50 /* force multiplier */;
-        this.force[1] = (this.b.simPosition[1] - this.a.simPosition[1]) / actualLength * deviance * 50 /* force multiplier */;
+        this.force[0] = (this.b.simPosition[0] - this.a.simPosition[0]) / actualLength * deviance * this.k;
+        this.force[1] = (this.b.simPosition[1] - this.a.simPosition[1]) / actualLength * deviance * this.k;
         
-        if(magnitudeV(this.force) > 10 /* max force */) {
+        if(magnitudeV(this.force) > this.maxF) {
             this.broken = true;
         }
         

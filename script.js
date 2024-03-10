@@ -23,7 +23,14 @@ let gridScale = 20;
 
 let simulate = false;
 
+let gravityForce = 1;
+
 let updateIntervalId;
+
+let zoomFactor = 1;
+let screenCenter = [0, 0];
+const screenOffset = [800 / 2, 500 / 2];
+const zoomSpeed = 0.2;
 
 document.addEventListener('DOMContentLoaded', () => {
     // reset form
@@ -36,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     can.addEventListener('click', (event) => {
         let box = can.getBoundingClientRect();
-        let point = [event.x - box.x, event.y - box.y];
+        let point = screenToWorld([event.x - box.x, event.y - box.y]);
         let mode = settings.getSetting('drawMode');
         if(mode == 'AddEdges') { // TODO: rewrite modes so that there is an enable-, disable, and click function for all of them so that for example selected can be reset easier
             let target = getTargetVertex(point);
@@ -104,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     can.addEventListener('mousedown', (event) => {
         let box = can.getBoundingClientRect();
-        let point = [event.x - box.x, event.y - box.y];
+        let point = screenToWorld([event.x - box.x, event.y - box.y]);
         if(settings.getSetting('drawMode') == 'Move') {
             let target = getTargetVertex(point);
             if(target) {
@@ -123,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     can.addEventListener('mousemove', (event) => {
         let box = can.getBoundingClientRect();
-        let point = [event.x - box.x, event.y - box.y];
+        let point = screenToWorld([event.x - box.x, event.y - box.y]);
         if(settings.getSetting('drawMode') == 'Move') {
             if(dragging) {
                 if(enableGrid) {
@@ -135,6 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+    });
+    
+    can.addEventListener('wheel', (event) => {
+        let direction = event.wheelDelta > 0 ? 1 : -1;
+        zoomFactor *= 1 + direction * zoomSpeed;
+        
+        let box = can.getBoundingClientRect();
+        let point = screenToWorld([event.x - box.x, event.y - box.y]);
+        let offset = subV(point, screenCenter);
+        screenCenter = addV(screenCenter, mulVS(offset, zoomSpeed * direction));
     });
     
     // form click events
@@ -196,11 +213,13 @@ function draw() {
     ctx.lineWidth = 1;
     if(enableGrid) {
         ctx.beginPath();
-        for(let i = 0; i < box.width; i += gridScale) {
+        let offsetX = ((box.width % (gridScale * zoomFactor * 2)) / 2) - (screenCenter[0] % gridScale) * zoomFactor;
+        for(let i = offsetX; i < box.width; i += gridScale * zoomFactor) {
             ctx.moveTo(i, 0);
             ctx.lineTo(i, box.height);
         }
-        for(let i = 0; i < box.height; i += gridScale) {
+        let offsetY = ((box.height % (gridScale * zoomFactor * 2)) / 2) - (screenCenter[1] % gridScale) * zoomFactor;
+        for(let i = offsetY; i < box.height; i += gridScale * zoomFactor) {
             ctx.moveTo(0, i);
             ctx.lineTo(box.width, i);
         }
@@ -209,7 +228,7 @@ function draw() {
     
     // draw edges
     ctx.strokeStyle = '#888';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 5 * zoomFactor;
     edges.forEach((e) => {
         if(simulate) {
             if(e.broken) return;
@@ -217,12 +236,16 @@ function draw() {
             stress = Math.min(stress >> 0, 0xFF);
             ctx.strokeStyle = `rgb(${stress}, ${255 - stress}, 0)`;
             ctx.beginPath();
-            ctx.moveTo(e.a.simPosition[0], e.a.simPosition[1]);
-            ctx.lineTo(e.b.simPosition[0], e.b.simPosition[1]);
+            let posA = worldToScreen(e.a.simPosition);
+            let posB = worldToScreen(e.b.simPosition);
+            ctx.moveTo(posA[0], posA[1]);
+            ctx.lineTo(posB[0], posB[1]);
         } else {
             ctx.beginPath();
-            ctx.moveTo(e.a.pos[0], e.a.pos[1]);
-            ctx.lineTo(e.b.pos[0], e.b.pos[1]);
+            let posA = worldToScreen(e.a.pos);
+            let posB = worldToScreen(e.b.pos);
+            ctx.moveTo(posA[0], posA[1]);
+            ctx.lineTo(posB[0], posB[1]);
         }
         ctx.stroke();
     });
@@ -231,22 +254,21 @@ function draw() {
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 2;
     verts.forEach((v) => {
-        let x = simulate ? v.simPosition[0] : v.pos[0];
-        let y = simulate ? v.simPosition[1] : v.pos[1];
+        let pos = simulate ? worldToScreen(v.simPosition) : worldToScreen(v.pos);
         
         ctx.fillStyle = v == selectedVertex ? '#F00' : '#FFF';
         ctx.beginPath();
-        ctx.arc(x, y, 10, 0, 2*Math.PI);
+        ctx.arc(pos[0], pos[1], 10 * zoomFactor, 0, 2*Math.PI);
         ctx.fill();
         ctx.stroke();
         ctx.beginPath();
         if(v.type == 'FixedX' || v.type == 'Fixed') {
-            ctx.moveTo(x, y - 10);
-            ctx.lineTo(x, y + 10);
+            ctx.moveTo(pos[0], pos[1] - 10 * zoomFactor);
+            ctx.lineTo(pos[0], pos[1] + 10 * zoomFactor);
         }
         if(v.type == 'FixedY' || v.type == 'Fixed') {
-            ctx.moveTo(x - 10, y);
-            ctx.lineTo(x + 10, y);
+            ctx.moveTo(pos[0] - 10 * zoomFactor, pos[1]);
+            ctx.lineTo(pos[0] + 10 * zoomFactor, pos[1]);
         }
         ctx.stroke();
     });
@@ -260,4 +282,12 @@ class Settings {
     getSetting(name) {
         return (new FormData(this.form)).get(name);
     }
+}
+
+function screenToWorld(screenPos) {
+    return addV(mulVS(subV(screenPos, screenOffset), 1 / zoomFactor), screenCenter);
+}
+
+function worldToScreen(worldPos) {
+    return addV(mulVS(subV(worldPos, screenCenter), zoomFactor), screenOffset);
 }
