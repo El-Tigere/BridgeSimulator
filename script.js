@@ -21,7 +21,7 @@ let gridScale = 20;
 
 let simulate = false;
 
-let gravityForce = 1;
+let gravityAcceleration = 9.81;
 
 let updateIntervalId;
 
@@ -82,21 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(selectedVertex) {
                 document.querySelector('#settingsVertex').disabled = false;
                 document.querySelector('#type' + selectedVertex.type).checked = true;
-            } else {
-                document.querySelector('#settingsVertex').disabled = true;
-                // deselect vertex type
-                let typeLooseButton = document.querySelector('#typeLoose');
-                typeLooseButton.checked = true;
-                typeLooseButton.checked = false;
-            }
-        }
-        if(mode == 'EditVertices') {
-            let target = getTargetVertex(point);
-            selectedVertex = target;
-            
-            if(selectedVertex) {
-                document.querySelector('#settingsVertex').disabled = false;
-                document.querySelector('#type' + selectedVertex.type).checked = true;
+                document.querySelector('#vertexForce').value = selectedVertex.pullForce;
             } else {
                 document.querySelector('#settingsVertex').disabled = true;
                 // deselect vertex type
@@ -166,7 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.querySelector('#settingsVertex').addEventListener('change', (event) => {
         if(settings.getSetting('drawMode') == 'EditVertices') {
-            if(selectedVertex) selectedVertex.type = settings.getSetting('vertexType');
+            if(selectedVertex) {
+                selectedVertex.type = settings.getSetting('vertexType');
+                selectedVertex.pullForce = +settings.getSetting('vertexForce');
+            }
         }
     });
     
@@ -245,8 +234,8 @@ function draw() {
     edges.forEach((e) => {
         if(simulate) {
             if(e.broken) return;
-            let stress = magnitudeV(e.force) * 10 /* max force (fully red) */;
-            stress = Math.min(stress >> 0, 0xFF);
+            let stress = magnitudeV(e.force) * 255 / e.maxF /* max force (fully red) */;
+            stress = Math.min(stress >> 0, 255);
             ctx.strokeStyle = `rgb(${stress}, ${255 - stress}, 0)`;
             ctx.beginPath();
             let posA = worldToScreen(e.a.simPosition);
@@ -282,6 +271,11 @@ function draw() {
         if(v.type == 'FixedY' || v.type == 'Fixed') {
             ctx.moveTo(pos[0] - 10 * zoomFactor, pos[1]);
             ctx.lineTo(pos[0] + 10 * zoomFactor, pos[1]);
+        }
+        if(v.pullForce > 0) {
+            ctx.moveTo(pos[0] - 5 * zoomFactor, pos[1]);
+            ctx.lineTo(pos[0], pos[1] + 5 * zoomFactor);
+            ctx.lineTo(pos[0] + 5 * zoomFactor, pos[1]);
         }
         ctx.stroke();
     });

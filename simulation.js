@@ -39,9 +39,10 @@ function update(deltaTime) {
 }
 
 class Vertex {
-    constructor(x, y, type = 'Loose') {
+    constructor(x, y, type = 'Loose', pullForce = 0) {
         this.pos = [x, y];
         this.type = type;
+        this.pullForce = pullForce;
     }
     
     initSimulation() {
@@ -53,7 +54,7 @@ class Vertex {
     
     simulationStep(deltaTime, frictionFactor) {
         this.momentum = mulVS(this.momentum, frictionFactor); // friction
-        this.force[1] += gravityForce * this.mass; // gravitation
+        this.force[1] += gravityAcceleration * this.mass + this.pullForce; // gravitation and pullForce
         this.momentum = addV(this.momentum, mulVS(this.force, deltaTime));
         if(this.type == 'FixedX' || this.type == 'Fixed') this.momentum[0] = 0;
         if(this.type == 'FixedY' || this.type == 'Fixed') this.momentum[1] = 0;
@@ -67,7 +68,7 @@ class Edge {
         this.a = a;
         this.b = b;
         this.k = 50; // spring characteristic
-        this.maxF = 10; // max force
+        this.maxF = 100; // max force
     }
     
     initSimulation() {
