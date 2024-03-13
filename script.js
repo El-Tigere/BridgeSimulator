@@ -1,5 +1,3 @@
-// TODO: import and export bridge (json)
-
 let friction = 0.2;
 
 let can;
@@ -154,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         screenCenter = addV(screenCenter, mulVS(offset, zoomSpeed * direction));
     });
     
-    // form click events
+    // form events
     
     document.querySelector('#settingsMode').addEventListener('change', (event) => {
         selectedVertex = null;
@@ -183,6 +181,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#settingsOther').addEventListener('change', (event) => {
         enableGrid = settings.getSetting('enableGrid');
         friction = settings.getSetting('friction');
+    });
+    
+    document.querySelector('#importButton').addEventListener('click', (event) => {
+        let obj = JSON.parse(document.querySelector('#jsonText').value);
+        verts = [];
+        obj.verts.forEach((v) => verts.push(new Vertex(...v)));
+        edges = [];
+        obj.edges.forEach((e) => edges.push(new Edge(verts[e[0]], verts[e[1]])));
+    });
+    
+    document.querySelector('#exportButton').addEventListener('click', (event) => {
+        let obj = {verts: [], edges: []};
+        verts.forEach((v) => obj.verts.push([v.pos[0], v.pos[1], v.type]));
+        edges.forEach((e) => obj.edges.push([verts.indexOf(e.a), verts.indexOf(e.b)]));
+        document.querySelector('#jsonText').value = JSON.stringify(obj);
     });
     
     settings = new Settings();

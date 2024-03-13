@@ -23,11 +23,13 @@
             }
             div.settings form {
                 display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
             }
             div.settings input[type="radio"] {
                 display: none;
             }
-            div.settings input[type="radio"] + label {
+            div.settings input[type="radio"] + label, div.settings button {
                 display: inline-block;
                 margin: 0px 20px 10px 0px;
                 padding: 4px 8px 4px 8px;
@@ -36,6 +38,7 @@
                 background-color: #FFF;
                 color: #000;
                 user-select: none;
+                font-size: 1em;
             }
             div.settings input[type="radio"] + label:hover {
                 background-color: #CCC;
@@ -47,12 +50,13 @@
                 width: 50px;
             }
             div.settings fieldset {
+                max-width: 500px;
                 padding: 16px;
                 border: 2px solid #FFF;
-                max-width: 500px;
+                margin: 10px;
             }
-            div.settings fieldset + fieldset {
-                margin-left: 20px;
+            div.settings textarea {
+                resize: none;
             }
             
             div.settings fieldset[disabled] input + label {
@@ -109,6 +113,12 @@
                     <label for="enableGrid">grid</label><br>
                     <input type="number" name="friction" id="friction" value="0.2" min="0" step="0.05" max="1">
                     <label for="friction">friction</label>
+                </fieldset>
+                <fieldset id="settingsJson">
+                    <legend>Import, Export</legend>
+                    <button type="button" id="importButton">Import</button>
+                    <button type="button" id="exportButton">Export</button><br>
+                    <textarea name="jsonText" id="jsonText" cols="30" rows="1" spellcheck="false"></textarea>
                 </fieldset>
             </form>
         </div>

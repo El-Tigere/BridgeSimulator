@@ -39,9 +39,9 @@ function update(deltaTime) {
 }
 
 class Vertex {
-    constructor(x, y) {
+    constructor(x, y, type = 'Loose') {
         this.pos = [x, y];
-        this.type = 'Loose';
+        this.type = type;
     }
     
     initSimulation() {
