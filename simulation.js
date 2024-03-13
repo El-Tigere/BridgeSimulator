@@ -33,8 +33,7 @@ function update(deltaTime) {
     }
     
     edges.forEach((e) => e.calcForce());
-    let frictionFactor = (1 - deltaTime) ** friction;
-    //let frictionFactor = (1 - friction) ** (1 / deltaTime); // TODO: friction should be calculated like this but this does not work :(
+    let frictionFactor = (1 - friction) ** deltaTime;
     verts.forEach((v) => v.simulationStep(deltaTime, frictionFactor));
 }
 
